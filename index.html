@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - Image Viewer</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #160030;
+      color: white;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    form {
+      background: #25024a;
+      padding: 40px 30px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h2 {
+      margin-bottom: 20px;
+      text-align: center;
+      font-size: 26px;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: #0af;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 12px;
+      font-size: 16px;
+    }
+    #deleteBtn {
+      background: #f33;
+      display: none;
+    }
+    .toggle {
+      margin-top: 14px;
+      text-align: center;
+      cursor: pointer;
+      color: #ddd;
+      font-size: 15px;
+    }
+  
+    /* Desktop layout adjustments */
+    @media (min-width: 768px) {
+      form {
+        max-width: 450px;
+        padding: 50px 40px;
+      }
+      h2 {
+        font-size: 30px;
+      }
+      input, button {
+        font-size: 17px;
+      }
+    }
+  </style>
+  
+  
+</head>
+<body>
+  <form id="authForm">
+    <h2 id="formTitle">Login</h2>
+    <input type="email" id="email" placeholder="Gmail" required />
+    <input type="password" id="password" placeholder="Password" required />
+    <button type="submit">Login</button>
+    <div class="toggle" onclick="toggleMode()">Don't have an account? Sign up</div>
+    <button type="button" id="deleteBtn" onclick="deleteAccount()">Delete Account</button>
+  </form>
+
+  <script>
+    let isLogin = true;
+
+    function toggleMode() {
+      isLogin = !isLogin;
+      document.getElementById('formTitle').innerText = isLogin ? 'Login' : 'Sign Up';
+      document.querySelector('button[type="submit"]').innerText = isLogin ? 'Login' : 'Sign Up';
+      document.querySelector('.toggle').innerText = isLogin
+        ? "Don't have an account? Sign up"
+        : "Already have an account? Login";
+      document.getElementById('deleteBtn').style.display = isLogin ? 'block' : 'none';
+    }
+
+    document.getElementById('authForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const saved = JSON.parse(localStorage.getItem('users')) || {};
+
+      if (isLogin) {
+        if (saved[email] && saved[email].password === password) {
+          localStorage.setItem('currentUser', email);
+          window.location.href = 'index.html';
+        } else {
+          alert('Invalid credentials');
+        }
+      } else {
+        if (saved[email]) {
+          alert('User already exists');
+        } else {
+          saved[email] = { password };
+          localStorage.setItem('users', JSON.stringify(saved));
+          alert('Signup successful. Please login.');
+          toggleMode();
+        }
+      }
+    });
+
+    function deleteAccount() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const saved = JSON.parse(localStorage.getItem('users')) || {};
+
+      if (saved[email] && saved[email].password === password) {
+        // 1. Delete user from users list
+        delete saved[email];
+        localStorage.setItem('users', JSON.stringify(saved));
+
+        // 2. Clear currentUser if it matches
+        if (localStorage.getItem('currentUser') === email) {
+          localStorage.removeItem('currentUser');
+        }
+
+        // 3. Optional: Clear any user-specific image data (if using keys like `images_${email}`)
+        localStorage.removeItem(`images_${email}`); // Only if you store images per user
+
+        // 4. Feedback & reset
+        alert('Account deleted successfully.');
+        document.getElementById('authForm').reset();
+      } else {
+        alert('Email or password is incorrect. Cannot delete account.');
+      }
+    }
+
+    // Show delete button only in login mode
+    window.onload = function () {
+      if (isLogin) {
+        document.getElementById('deleteBtn').style.display = 'block';
+      }
+    };
+  </script>
+</body>
+</html>
